@@ -1,0 +1,16 @@
+# local settings and working files
+.claude/
+**/shots/
+__pycache__/
+node_modules/
+.DS_Store
+Thumbs.db
+
+# the Johns Hopkins video is someone else's copyrighted work: never commit it
+*.mp4
+*.mov
+*.webm
+
+# raw template downloads (see README: Template data); the extracted slices are committed
+figures/data/mni152/*.nii.gz
+figures/data/omm1/*.nii.gz

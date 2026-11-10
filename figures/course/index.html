@@ -1,0 +1,1095 @@
+<title>MRI Physics Bench</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@75..100,500..800&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: a bench console. Unit tabs run across the top; in a lab the instrument fills the left at full size
+   and its lab panel (guide, missions, checks, physics, notebook, tutor) sits to its right. */
+:root {
+  --paper: #f3f4f1;
+  --sheet: #ffffff;
+  --well: #e9ebe7;
+  --ink: #1b1f22;
+  --ink-soft: #586066;
+  --rule: #d6dad6;
+  --pole: #b2372c; /* the magnet's N-pole red, the one accent */
+  --pole-ink: #ffffff;
+  --pole-soft: #f5e3df;
+  --ok: #2c7a4b;
+  --ok-soft: #dfeee4;
+  --bench: #f2f2ef; /* the instruments' own page colour */
+  --film: #070808; /* image viewers stay dark in both themes, as film does */
+  --film-ink: #c8cecb;
+  --shadow: 0 1px 0 rgba(20, 24, 26, 0.04), 0 8px 24px -12px rgba(20, 24, 26, 0.18);
+  --display: "Archivo", "Arial Narrow", system-ui, sans-serif;
+  --body: "Source Serif 4", Georgia, "Times New Roman", serif;
+  --mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #0e1011; --sheet: #15181a; --well: #1c2023; --ink: #e4e7e6; --ink-soft: #9aa2a6; --rule: #2a2f32;
+    --pole: #e47a6c; --pole-ink: #1a0f0d; --pole-soft: #2d1c1a; --ok: #6cc28e; --ok-soft: #16271d; --bench: #0b0b0b;
+    --shadow: 0 1px 0 rgba(0, 0, 0, 0.3), 0 10px 28px -14px rgba(0, 0, 0, 0.7); color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --paper: #0e1011; --sheet: #15181a; --well: #1c2023; --ink: #e4e7e6; --ink-soft: #9aa2a6; --rule: #2a2f32;
+  --pole: #e47a6c; --pole-ink: #1a0f0d; --pole-soft: #2d1c1a; --ok: #6cc28e; --ok-soft: #16271d; --bench: #0b0b0b;
+  --shadow: 0 1px 0 rgba(0, 0, 0, 0.3), 0 10px 28px -14px rgba(0, 0, 0, 0.7); color-scheme: dark;
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+body { background: var(--paper); color: var(--ink); font: 400 16px/1.6 var(--body); -webkit-font-smoothing: antialiased; }
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--paper); }
+h1, h2, h3 { font-family: var(--display); font-stretch: 80%; text-wrap: balance; margin: 0; }
+p { margin: 0; }
+a { color: var(--pole); text-underline-offset: 3px; }
+button { font: inherit; color: inherit; }
+:focus-visible { outline: 2px solid var(--pole); outline-offset: 2px; }
+kbd { font: 500 0.8em var(--mono); border: 1px solid var(--rule); border-bottom-width: 2px; border-radius: 4px; padding: 0 5px; background: var(--sheet); color: var(--ink); white-space: nowrap; }
+.eyebrow { font: 500 12px/1.4 var(--mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--pole); }
+.gutter { padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+.wrap { max-width: 1320px; margin: 0 auto; }
+.small { font-size: 14px; color: var(--ink-soft); }
+
+/* top bar */
+.top { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 20; background: var(--paper); border-bottom: 1px solid var(--rule); }
+.top-inner { display: flex; align-items: center; gap: 18px; min-height: 58px; }
+.brand { display: inline-flex; align-items: center; gap: 10px; color: var(--ink); text-decoration: none; font: 800 19px/1 var(--display); font-stretch: 78%; letter-spacing: 0.01em; white-space: nowrap; }
+.mark { width: 22px; height: 22px; flex: none; }
+.units { display: flex; gap: 2px; overflow-x: auto; scrollbar-width: none; min-width: 0; flex: 1; }
+.units::-webkit-scrollbar { display: none; }
+.units a { display: inline-flex; align-items: center; gap: 7px; padding: 8px 12px; border-radius: 8px; color: var(--ink-soft); text-decoration: none; font: 600 15px/1 var(--display); font-stretch: 88%; white-space: nowrap; }
+.units a:hover { color: var(--ink); background: var(--well); }
+.units a[aria-current="page"] { color: var(--ink); background: var(--sheet); box-shadow: inset 0 0 0 1px var(--rule); }
+.count { font: 500 11px/1 var(--mono); color: var(--ink-soft); font-variant-numeric: tabular-nums; }
+.units a[aria-current="page"] .count { color: var(--pole); }
+.top-tools { display: flex; align-items: center; gap: 8px; flex: none; }
+.icon-btn { display: inline-grid; place-items: center; width: 36px; height: 36px; border-radius: 8px; border: 1px solid var(--rule); background: var(--sheet); cursor: pointer; }
+.icon-btn svg { width: 18px; height: 18px; }
+.live { display: inline-flex; align-items: center; gap: 8px; }
+.pill { display: inline-flex; align-items: center; gap: 8px; padding: 7px 12px; border-radius: 999px; border: 1px solid var(--rule); background: var(--sheet); font: 500 13px/1 var(--mono); cursor: pointer; white-space: nowrap; }
+.pill[aria-pressed="true"] { background: var(--pole); color: var(--pole-ink); border-color: var(--pole); }
+.pill .led { width: 8px; height: 8px; border-radius: 50%; background: var(--pole); }
+.pill[aria-pressed="true"] .led { background: var(--pole-ink); }
+@media (prefers-reduced-motion: no-preference) { .pill.on-air .led { animation: blink 1.6s ease-in-out infinite; } }
+@keyframes blink { 50% { opacity: 0.25; } }
+
+/* lab strip: the unit's labs as secondary tabs */
+.strip { border-bottom: 1px solid var(--rule); background: var(--paper); }
+.strip[hidden] { display: none; }
+.strip-inner { display: flex; gap: 6px; overflow-x: auto; padding-block: 10px; scrollbar-width: thin; }
+.chip { display: inline-flex; align-items: center; gap: 9px; padding: 8px 12px 8px 10px; border-radius: 10px; border: 1px solid var(--rule); background: var(--sheet); color: var(--ink); text-decoration: none; white-space: nowrap; font: 600 14px/1 var(--display); font-stretch: 88%; }
+.chip:hover { border-color: var(--ink-soft); }
+.chip[aria-current="page"] { border-color: var(--pole); box-shadow: inset 0 0 0 1px var(--pole); }
+.chip-no { font: 500 12px/1 var(--mono); color: var(--pole); }
+.pips { display: inline-flex; gap: 3px; }
+.pip { width: 7px; height: 7px; border-radius: 50%; border: 1.5px solid var(--rule); }
+.pip.done { background: var(--ok); border-color: var(--ok); }
+
+main { padding-block: 28px 80px; }
+.view[hidden] { display: none !important; }
+
+/* buttons */
+.btn { display: inline-flex; align-items: center; gap: 8px; padding: 10px 16px; border-radius: 10px; border: 1px solid var(--rule); background: var(--sheet); color: var(--ink); text-decoration: none; font: 600 15px/1 var(--display); font-stretch: 90%; cursor: pointer; white-space: nowrap; }
+.btn:hover { border-color: var(--ink-soft); }
+.btn.primary { background: var(--pole); border-color: var(--pole); color: var(--pole-ink); }
+.btn.primary:hover { filter: brightness(1.06); }
+.btn[aria-disabled="true"] { opacity: 0.45; pointer-events: none; }
+.btn.small-btn { padding: 7px 12px; font-size: 14px; }
+
+/* home */
+.hero { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 40px; align-items: end; padding-block: 12px 36px; border-bottom: 1px solid var(--rule); }
+.hero h1 { font-size: clamp(44px, 7.5vw, 84px); font-weight: 800; line-height: 0.92; letter-spacing: -0.015em; font-stretch: 75%; }
+.hero .lede { font-size: 19px; line-height: 1.55; max-width: 58ch; margin-top: 16px; }
+.hero-side { display: grid; gap: 14px; justify-items: start; }
+.meter { display: block; width: min(320px, 100%); height: 8px; border-radius: 99px; background: var(--well); overflow: hidden; }
+.meter > span { display: block; height: 100%; width: 0; background: var(--ok); border-radius: 99px; transition: width 0.5s ease; }
+.meter-text { font: 500 13px/1.4 var(--mono); color: var(--ink-soft); font-variant-numeric: tabular-nums; }
+.unit-block { display: grid; gap: 16px; padding-block: 34px 6px; }
+.unit-head { display: flex; align-items: baseline; gap: 16px; flex-wrap: wrap; }
+.unit-head h2 { font-size: 30px; font-weight: 800; }
+.unit-head p { color: var(--ink-soft); }
+.unit-head .count { margin-left: auto; font-size: 13px; }
+.cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 16px; }
+.card { display: grid; grid-template-rows: auto 1fr; border: 1px solid var(--rule); border-radius: 14px; background: var(--sheet); color: var(--ink); text-decoration: none; overflow: hidden; transition: transform 0.18s ease, box-shadow 0.18s ease; }
+.card:hover { box-shadow: var(--shadow); }
+@media (prefers-reduced-motion: no-preference) { .card:hover { transform: translateY(-2px); } }
+.thumb { position: relative; background: var(--bench); aspect-ratio: 600 / 404; max-width: 100%; border-bottom: 1px solid var(--rule); }
+.thumb img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.th-dark { display: none !important; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .th-dark { display: block !important; } :root:not([data-theme="light"]) .th-light { display: none !important; } }
+:root[data-theme="dark"] .th-dark { display: block !important; }
+:root[data-theme="dark"] .th-light { display: none !important; }
+.card-body { display: grid; gap: 6px; padding: 14px 16px 16px; align-content: start; }
+.card-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.card-no { font: 500 12px/1 var(--mono); color: var(--pole); letter-spacing: 0.04em; }
+.card h3 { font-size: 20px; font-weight: 700; line-height: 1.15; }
+.card p { font-size: 14px; color: var(--ink-soft); line-height: 1.45; }
+.card .tags { font: 400 12px/1.4 var(--mono); color: var(--ink-soft); }
+.how { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 20px; margin-top: 44px; padding-top: 28px; border-top: 1px solid var(--rule); }
+.how div { display: grid; gap: 6px; align-content: start; }
+.how h3 { font-size: 17px; font-weight: 700; font-stretch: 85%; }
+.how p { font-size: 15px; color: var(--ink-soft); line-height: 1.5; }
+
+/* lab */
+.lab-head { display: flex; align-items: end; justify-content: space-between; gap: 20px; flex-wrap: wrap; padding-bottom: 18px; }
+.lab-head h1 { font-size: clamp(30px, 4vw, 44px); font-weight: 800; line-height: 1.02; margin-top: 6px; }
+.lab-sub { margin-top: 6px; font: 400 13px/1.5 var(--mono); color: var(--ink-soft); }
+.lab-nav { display: flex; gap: 8px; }
+.lab-body { display: grid; grid-template-columns: minmax(0, 1fr) minmax(340px, 410px); gap: 22px; align-items: start; }
+.bench { display: grid; gap: 10px; min-width: 0; position: sticky; top: calc(env(safe-area-inset-top, 0px) + 72px); }
+.frame-host { background: var(--bench); border: 1px solid var(--rule); border-radius: 14px; overflow: hidden; min-height: 320px; }
+.frame-host iframe { display: block; width: 100%; height: 640px; border: 0; background: transparent; }
+.frame-host iframe[hidden] { display: none; }
+.ticker { display: flex; align-items: center; gap: 10px; min-width: 0; padding: 9px 12px; border-radius: 10px; background: var(--well); font: 400 13px/1.4 var(--mono); }
+.ticker .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--ok); flex: none; }
+@media (prefers-reduced-motion: no-preference) { .ticker .dot { animation: blink 2s ease-in-out infinite; } }
+.ticker-label { color: var(--ink-soft); flex: none; font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; }
+.ticker output { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.bench-hint { font-size: 13px; color: var(--ink-soft); }
+
+.panel { border: 1px solid var(--rule); border-radius: 14px; background: var(--sheet); min-width: 0; display: grid; grid-template-rows: auto 1fr; }
+.panel-tabs { display: flex; flex-wrap: wrap; gap: 2px; padding: 6px; border-bottom: 1px solid var(--rule); background: var(--paper); border-radius: 14px 14px 0 0; }
+.panel-tabs button { display: inline-flex; align-items: center; gap: 6px; padding: 8px 10px; border: 0; border-radius: 8px; background: transparent; color: var(--ink-soft); cursor: pointer; font: 600 14px/1 var(--display); font-stretch: 90%; }
+.panel-tabs button:hover { color: var(--ink); }
+.panel-tabs button[aria-selected="true"] { background: var(--sheet); color: var(--ink); box-shadow: inset 0 0 0 1px var(--rule); }
+.panel-tabs button[hidden] { display: none; }
+.badge { font: 500 11px/1 var(--mono); padding: 3px 6px; border-radius: 99px; background: var(--well); color: var(--ink-soft); font-variant-numeric: tabular-nums; }
+.badge.full { background: var(--ok-soft); color: var(--ok); }
+.pane { padding: 18px 20px 22px; display: grid; gap: 14px; align-content: start; min-width: 0; }
+.pane[hidden] { display: none; }
+.pane h3 { font-size: 13px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-soft); font-stretch: 90%; }
+.pane ul { margin: 0; padding-left: 1.1em; display: grid; gap: 8px; }
+.pane li { line-height: 1.5; }
+.pane .note { font-size: 13px; color: var(--ink-soft); }
+.visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+.missions { list-style: none; padding: 0 !important; gap: 10px !important; }
+.mission { display: grid; grid-template-columns: 26px minmax(0, 1fr) auto; gap: 10px; align-items: start; padding: 12px; border-radius: 10px; border: 1px solid var(--rule); background: var(--paper); }
+.mission .tick { width: 22px; height: 22px; border-radius: 50%; border: 2px solid var(--rule); display: grid; place-items: center; margin-top: 1px; }
+.mission.done { border-color: var(--ok); background: var(--ok-soft); }
+.mission.done .tick { border-color: var(--ok); background: var(--ok); }
+.mission.done .tick svg { display: block; }
+.mission .tick svg { display: none; width: 12px; height: 12px; }
+.mission-text { line-height: 1.45; }
+.mission .manual { font: 500 12px/1 var(--mono); padding: 6px 8px; border-radius: 6px; border: 1px solid var(--rule); background: var(--sheet); cursor: pointer; }
+@media (prefers-reduced-motion: no-preference) { .mission.just { animation: pop 0.6s ease; } }
+@keyframes pop { 30% { transform: scale(1.03); } }
+
+.q { display: grid; gap: 10px; padding: 14px; border-radius: 10px; border: 1px solid var(--rule); background: var(--paper); }
+.q-text { font-weight: 600; line-height: 1.45; }
+.opts { display: grid; gap: 6px; }
+.opt { text-align: left; padding: 9px 12px; border-radius: 8px; border: 1px solid var(--rule); background: var(--sheet); cursor: pointer; line-height: 1.4; font-size: 15px; }
+.opt:hover:not(:disabled) { border-color: var(--ink-soft); }
+.opt:disabled { cursor: default; }
+.opt.right { border-color: var(--ok); background: var(--ok-soft); }
+.opt.wrong { border-color: var(--pole); background: var(--pole-soft); }
+.why { font-size: 14px; line-height: 1.5; color: var(--ink); }
+.why b { font-family: var(--display); font-stretch: 90%; }
+.q-retry { justify-self: start; font: 500 12px/1 var(--mono); border: 0; background: none; color: var(--pole); cursor: pointer; padding: 0; text-decoration: underline; text-underline-offset: 3px; }
+
+.physics-text { font-size: 15px; line-height: 1.6; max-height: 560px; overflow-y: auto; padding-right: 6px; display: grid; gap: 12px; }
+.physics-text .model { font-size: 13px; color: var(--ink-soft); }
+.legend-list li { font-size: 14px; }
+
+.notes-area { width: 100%; min-height: 220px; resize: vertical; border: 1px solid var(--rule); border-radius: 10px; background: var(--paper); color: var(--ink); padding: 12px; font: 400 15px/1.55 var(--body); }
+.row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.saved { font: 500 12px/1 var(--mono); color: var(--ink-soft); }
+
+.chat { display: grid; gap: 10px; max-height: 420px; overflow-y: auto; padding-right: 4px; }
+.msg { padding: 10px 12px; border-radius: 10px; line-height: 1.5; white-space: pre-wrap; font-size: 15px; }
+.msg.me { background: var(--well); justify-self: end; max-width: 88%; }
+.msg.bot { background: var(--paper); border: 1px solid var(--rule); }
+.msg.bot.thinking { color: var(--ink-soft); font-style: italic; }
+.suggest { display: flex; flex-wrap: wrap; gap: 6px; }
+.suggest button { text-align: left; padding: 7px 10px; border-radius: 8px; border: 1px dashed var(--rule); background: transparent; cursor: pointer; font-size: 14px; line-height: 1.35; }
+.suggest button:hover { border-style: solid; border-color: var(--ink-soft); }
+.ask-form { display: grid; gap: 8px; }
+.ask-form textarea { width: 100%; min-height: 70px; resize: vertical; border: 1px solid var(--rule); border-radius: 10px; background: var(--paper); color: var(--ink); padding: 10px 12px; font: 400 15px/1.5 var(--body); }
+
+/* tools and reference */
+.page-head { display: grid; gap: 8px; padding-bottom: 22px; max-width: 72ch; }
+.page-head h1 { font-size: clamp(32px, 4.5vw, 52px); font-weight: 800; line-height: 1; }
+.page-head p { font-size: 17px; }
+.subtabs { display: flex; gap: 4px; margin-bottom: 22px; flex-wrap: wrap; }
+.subtabs a { padding: 8px 14px; border-radius: 8px; border: 1px solid var(--rule); background: var(--sheet); color: var(--ink-soft); text-decoration: none; font: 600 14px/1 var(--display); font-stretch: 90%; }
+.subtabs a[aria-current="page"] { color: var(--ink); border-color: var(--pole); box-shadow: inset 0 0 0 1px var(--pole); }
+.tables { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 380px), 1fr)); gap: 28px 32px; }
+.scroll { overflow-x: auto; min-width: 0; }
+table { border-collapse: collapse; width: 100%; font: 400 14px/1.4 var(--mono); font-variant-numeric: tabular-nums; }
+caption { text-align: left; font: 700 13px var(--display); letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-soft); padding-bottom: 8px; }
+th, td { text-align: right; padding: 7px 10px; border-bottom: 1px solid var(--rule); }
+th:first-child, td:first-child { text-align: left; }
+thead th { font-weight: 500; color: var(--ink-soft); }
+.ref-note { margin-top: 24px; max-width: 80ch; }
+.gloss-search { width: min(420px, 100%); padding: 10px 14px; border-radius: 10px; border: 1px solid var(--rule); background: var(--sheet); color: var(--ink); font: 400 16px/1.4 var(--body); margin-bottom: 18px; }
+.gloss { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 330px), 1fr)); gap: 0 32px; margin: 0; }
+.gloss div { padding: 12px 0; border-bottom: 1px solid var(--rule); break-inside: avoid; }
+.gloss dt { font: 700 17px/1.3 var(--display); font-stretch: 88%; display: flex; justify-content: space-between; gap: 12px; }
+.gloss dt a { font: 500 12px/1.6 var(--mono); text-decoration: none; }
+.gloss dd { margin: 4px 0 0; font-size: 15px; line-height: 1.5; color: var(--ink-soft); }
+.credits { display: grid; gap: 12px; max-width: 80ch; font-size: 15px; }
+
+.coords { display: grid; grid-template-columns: minmax(0, 380px) minmax(0, 1fr); gap: 32px; align-items: start; }
+.viewer { position: relative; padding: 22px; background: var(--film); border-radius: 12px; }
+.viewer canvas { display: block; width: 100%; height: auto; image-rendering: pixelated; cursor: crosshair; }
+.orient { position: absolute; font: 500 12px var(--mono); color: var(--film-ink); }
+.o-top { top: 4px; left: 50%; transform: translateX(-50%); }
+.o-bottom { bottom: 4px; left: 50%; transform: translateX(-50%); }
+.o-left { left: 7px; top: 50%; transform: translateY(-50%); }
+.o-right { right: 7px; top: 50%; transform: translateY(-50%); }
+.coords-panel { display: grid; gap: 18px; min-width: 0; }
+.toggle { display: inline-flex; justify-self: start; border: 1px solid var(--rule); border-radius: 8px; overflow: hidden; }
+.toggle button { font: 500 14px/1 var(--body); background: var(--sheet); color: var(--ink); border: 0; padding: 9px 14px; cursor: pointer; }
+.toggle button + button { border-left: 1px solid var(--rule); }
+.toggle button[aria-pressed="true"] { background: var(--ink); color: var(--paper); }
+.read { display: grid; grid-template-columns: auto 1fr; gap: 6px 16px; margin: 0; font: 400 14px/1.5 var(--mono); font-variant-numeric: tabular-nums; }
+.read dt { color: var(--ink-soft); }
+.read dd { margin: 0; }
+
+/* toast and help */
+.toast { position: fixed; z-index: 40; right: calc(16px + env(safe-area-inset-right, 0px)); bottom: calc(16px + env(safe-area-inset-bottom, 0px)); max-width: min(380px, calc(100% - 32px)); display: grid; grid-template-columns: 30px minmax(0, 1fr); gap: 12px; align-items: center; padding: 14px 16px; border-radius: 12px; background: var(--sheet); border: 1px solid var(--ok); box-shadow: var(--shadow); }
+.toast[hidden] { display: none; }
+.toast .tick { width: 30px; height: 30px; border-radius: 50%; background: var(--ok); display: grid; place-items: center; }
+.toast .tick svg { width: 16px; height: 16px; }
+.toast b { display: block; font: 700 15px/1.2 var(--display); font-stretch: 90%; color: var(--ok); }
+.toast span { font-size: 14px; line-height: 1.4; }
+@media (prefers-reduced-motion: no-preference) { .toast.show { animation: rise 0.35s ease; } }
+@keyframes rise { from { transform: translateY(12px); opacity: 0; } }
+.help { position: fixed; z-index: 45; inset: 0; display: grid; place-items: center; background: rgba(10, 12, 13, 0.45); padding: 16px; }
+.help[hidden] { display: none; }
+.help-card { width: min(480px, 100%); background: var(--sheet); border: 1px solid var(--rule); border-radius: 14px; padding: 22px 24px; display: grid; gap: 12px; box-shadow: var(--shadow); }
+.help-card dl { display: grid; grid-template-columns: auto 1fr; gap: 8px 14px; margin: 0; }
+.help-card dt { text-align: right; }
+
+@media (max-width: 1100px) {
+  .lab-body { grid-template-columns: minmax(0, 1fr); }
+  .bench { position: static; }
+  .hero { grid-template-columns: minmax(0, 1fr); gap: 22px; }
+  .how { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 640px) {
+  .brand span { display: none; }
+  .coords { grid-template-columns: minmax(0, 1fr); }
+  .how { grid-template-columns: minmax(0, 1fr); }
+  .lab-nav { width: 100%; justify-content: space-between; }
+  .pane { padding: 16px; }
+}
+</style>
+
+<header class="top">
+  <div class="top-inner wrap gutter">
+    <a class="brand" href="#home" aria-label="MRI Physics Bench, home">
+      <svg class="mark" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="8.5" height="18" rx="2" fill="var(--pole)"/><rect x="12.5" y="3" width="8.5" height="18" rx="2" fill="var(--ink)"/><path d="M5.6 9.5h3.3M7.25 7.85v3.3M14.9 9.5h3.3" stroke="var(--paper)" stroke-width="1.6" stroke-linecap="round"/></svg>
+      <span>MRI Physics Bench</span>
+    </a>
+    <nav class="units" aria-label="Units">
+      <a href="#home" data-tab="home">Bench</a>
+      <a href="#fig-1" data-tab="physics">Physics <span class="count" data-count="physics"></span></a>
+      <a href="#fig-9" data-tab="fmri">fMRI <span class="count" data-count="fmri"></span></a>
+      <a href="#fig-12" data-tab="diffusion">Diffusion <span class="count" data-count="diffusion"></span></a>
+      <a href="#coordinates" data-tab="tools">Tools</a>
+      <a href="#reference" data-tab="reference">Reference</a>
+    </nav>
+    <div class="top-tools">
+      <div class="live" id="live" hidden>
+        <button class="pill" id="present-btn" type="button" aria-pressed="false" hidden><span class="led"></span><span id="present-label">Present</span></button>
+        <button class="pill" id="follow-btn" type="button" aria-pressed="false" hidden><span class="led"></span><span id="follow-label">Follow lecture</span></button>
+      </div>
+      <button class="icon-btn" id="help-btn" type="button" aria-label="Keyboard shortcuts"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="2.5" y="6" width="19" height="12" rx="2"/><path d="M6.5 10h1M10.5 10h1M14.5 10h1M8 14h8"/></svg></button>
+      <button class="icon-btn" id="theme-btn" type="button" aria-label="Switch theme"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="8"/><path d="M12 4a8 8 0 0 1 0 16z" fill="currentColor" stroke="none"/></svg></button>
+    </div>
+  </div>
+</header>
+
+<nav class="strip" id="strip" aria-label="Labs in this unit" hidden>
+  <div class="strip-inner wrap gutter" id="strip-inner"></div>
+</nav>
+
+<main class="wrap gutter">
+  <section class="view" id="view-home" aria-label="Bench">
+    <div class="hero">
+      <div>
+        <p class="eyebrow">Neuroimaging · an interactive lab bench</p>
+        <h1>MRI Physics Bench</h1>
+        <p class="lede">Thirteen working instruments for a neuroimaging course, from a hydrogen nucleus to a tractogram. Operate each one, complete its missions, check your understanding and keep a lab notebook as you go. Every moving part runs on the real equation, and most end on the same brain slice.</p>
+      </div>
+      <div class="hero-side">
+        <a class="btn primary" id="continue-btn" href="#fig-1">Start with Fig 1</a>
+        <span class="meter" aria-hidden="true"><span id="meter-fill"></span></span>
+        <span class="meter-text" id="meter-text">0 of 39 missions complete</span>
+      </div>
+    </div>
+    <div id="home-units"></div>
+    <div class="how">
+      <div><h3>Operate the instrument</h3><p>Move the pointer over a figure to take control, or click it and use the keys in its corner. Each one runs a demonstration until you do.</p></div>
+      <div><h3>Missions tick themselves</h3><p>Every lab sets three missions. Reach the state on the instrument and the bench notices; the demonstration alone never counts.</p></div>
+      <div><h3>Check yourself</h3><p>Two quick questions per lab, each with the reasoning behind the answer, and a glossary under Reference.</p></div>
+      <div><h3>Notebook and tutor</h3><p>Keep notes beside each instrument and save them as one file. Where your account allows it, ask Claude about what the instrument shows.</p></div>
+    </div>
+  </section>
+
+  <section class="view" id="view-lab" aria-labelledby="lab-title" hidden>
+    <div class="lab-head">
+      <div>
+        <p class="eyebrow" id="lab-eyebrow">Fig 1</p>
+        <h1 id="lab-title">Lab</h1>
+        <p class="lab-sub" id="lab-sub"></p>
+      </div>
+      <div class="lab-nav">
+        <a class="btn small-btn" id="prev-lab" href="#home">←</a>
+        <a class="btn small-btn" id="next-lab" href="#home">→</a>
+      </div>
+    </div>
+    <div class="lab-body">
+      <div class="bench">
+        <div class="frame-host" id="frame-host"></div>
+        <div class="ticker"><span class="dot" aria-hidden="true"></span><span class="ticker-label">Reads</span><output id="ticker" aria-live="off">waiting for the instrument</output></div>
+        <p class="bench-hint">Click the instrument, then use its keys. <kbd>[</kbd> and <kbd>]</kbd> move between labs when the instrument does not have focus.</p>
+      </div>
+      <aside class="panel" aria-label="Lab panel">
+        <div class="panel-tabs" role="tablist" aria-label="Lab panel" id="panel-tabs">
+          <button role="tab" type="button" id="tab-guide" aria-controls="pane-guide" aria-selected="true">Guide</button>
+          <button role="tab" type="button" id="tab-missions" aria-controls="pane-missions" aria-selected="false" tabindex="-1">Missions <span class="badge" id="mission-badge">0/3</span></button>
+          <button role="tab" type="button" id="tab-check" aria-controls="pane-check" aria-selected="false" tabindex="-1">Check</button>
+          <button role="tab" type="button" id="tab-physics" aria-controls="pane-physics" aria-selected="false" tabindex="-1">Physics</button>
+          <button role="tab" type="button" id="tab-notes" aria-controls="pane-notes" aria-selected="false" tabindex="-1">Notebook</button>
+          <button role="tab" type="button" id="tab-ask" aria-controls="pane-ask" aria-selected="false" tabindex="-1" hidden>Ask</button>
+        </div>
+        <div class="pane" role="tabpanel" id="pane-guide" aria-labelledby="tab-guide">
+          <h3>What to notice</h3><ul id="guide-notice"></ul>
+          <h3>Try this</h3><ul id="guide-try"></ul>
+        </div>
+        <div class="pane" role="tabpanel" id="pane-missions" aria-labelledby="tab-missions" hidden>
+          <p class="note" id="missions-note">Reach each state on the instrument. The bench ticks a mission when it sees it, but only while you are operating the instrument.</p>
+          <ul class="missions" id="missions-list"></ul>
+        </div>
+        <div class="pane" role="tabpanel" id="pane-check" aria-labelledby="tab-check" hidden><div id="check-list" style="display:grid;gap:14px"></div></div>
+        <div class="pane" role="tabpanel" id="pane-physics" aria-labelledby="tab-physics" hidden>
+          <h3>Reading the instrument</h3><ul class="legend-list" id="physics-keys"></ul>
+          <h3>The physics</h3><div class="physics-text" id="physics-text"></div>
+        </div>
+        <div class="pane" role="tabpanel" id="pane-notes" aria-labelledby="tab-notes" hidden>
+          <label class="note" for="notes-area">Notes for this lab stay in this browser. Save the whole notebook to keep or hand in.</label>
+          <textarea class="notes-area" id="notes-area" placeholder="What changed when you moved TR? Which tissue nulled first?"></textarea>
+          <div class="row"><button class="btn small-btn" id="save-notebook" type="button" hidden>Save notebook (.md)</button><button class="btn small-btn" id="copy-notebook" type="button">Copy notebook</button><span class="saved" id="notes-status" aria-live="polite"></span></div>
+          <textarea class="notes-area" id="notebook-fallback" readonly hidden aria-label="Notebook text to copy"></textarea>
+        </div>
+        <div class="pane" role="tabpanel" id="pane-ask" aria-labelledby="tab-ask" hidden>
+          <p class="note">Claude answers with this lab and the instrument's current reading in view. Each question uses your own Claude account.</p>
+          <div class="suggest" id="ask-suggest"></div>
+          <div class="chat" id="chat" aria-live="polite"></div>
+          <form class="ask-form" id="ask-form">
+            <label class="note" for="ask-input">Your question</label>
+            <textarea id="ask-input" placeholder="Why does CSF go dark at short TR?"></textarea>
+            <div class="row"><button class="btn primary small-btn" id="ask-send" type="submit">Ask</button><button class="btn small-btn" id="ask-stop" type="button" hidden>Stop</button><span class="saved" id="ask-status" aria-live="polite"></span></div>
+          </form>
+        </div>
+      </aside>
+    </div>
+  </section>
+
+  <section class="view" id="view-coordinates" aria-labelledby="coords-title" hidden>
+    <div class="page-head">
+      <p class="eyebrow">Tools</p>
+      <h1 id="coords-title">Voxels and millimetres</h1>
+      <p>An image file stores a grid of voxels, numbered (i, j, k) from one corner. A small matrix saved with it, the affine, turns those indices into millimetres in a shared space, here MNI: x runs towards the subject's right, y forwards and z up, with the origin near the anterior commissure, 14 mm below this slice. Move over the slice, or click it and use the arrow keys, to read both. Then switch how left and right are shown: the same voxel lands on the other side of the screen.</p>
+    </div>
+    <div class="coords">
+      <div class="viewer">
+        <canvas id="coords-canvas" tabindex="0" role="application" aria-label="MNI152 slice at z = 14 mm. Arrow keys move the crosshair one voxel at a time." aria-describedby="coords-read"></canvas>
+        <span class="orient o-top" aria-hidden="true">A</span>
+        <span class="orient o-bottom" aria-hidden="true">P</span>
+        <span class="orient o-left" id="orient-left" aria-hidden="true">R</span>
+        <span class="orient o-right" id="orient-right" aria-hidden="true">L</span>
+      </div>
+      <div class="coords-panel">
+        <div class="toggle" role="group" aria-label="How left and right are shown">
+          <button type="button" id="view-radiological" aria-pressed="true">Radiological</button>
+          <button type="button" id="view-neurological" aria-pressed="false">Neurological</button>
+        </div>
+        <dl class="read" id="coords-read">
+          <dt>Voxel (i, j, k)</dt><dd id="read-ijk">–</dd>
+          <dt>MNI (x, y, z)</dt><dd id="read-mni">–</dd>
+          <dt>Side</dt><dd id="read-side">–</dd>
+          <dt>Tissue</dt><dd id="read-tissue">–</dd>
+        </dl>
+        <p class="small" id="view-note">Radiological: you look up from the patient's feet, so their right is on your left. Most clinical viewers use this.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="view" id="view-reference" aria-labelledby="ref-title" hidden>
+    <div class="page-head">
+      <p class="eyebrow">Reference</p>
+      <h1 id="ref-title">Numbers, terms and sources</h1>
+    </div>
+    <nav class="subtabs" aria-label="Reference sections">
+      <a href="#reference" data-sub="reference">Numbers</a>
+      <a href="#glossary" data-sub="glossary">Glossary</a>
+      <a href="#credits" data-sub="credits">Sources and credits</a>
+    </nav>
+    <div id="sub-reference">
+      <div class="tables">
+        <div class="scroll"><table><caption>Brain tissue at 3 T</caption><thead><tr><th>Tissue</th><th>T1 (ms)</th><th>T2 (ms)</th><th>T2* (ms)</th><th>PD</th><th>IR null (ms)</th></tr></thead><tbody><tr><td>White matter</td><td>830</td><td>80</td><td>53</td><td>0.70</td><td>575</td></tr><tr><td>Grey matter</td><td>1330</td><td>110</td><td>65</td><td>0.80</td><td>920</td></tr><tr><td>CSF</td><td>4000</td><td>2000</td><td>148</td><td>1.00</td><td>2372</td></tr></tbody></table></div>
+        <div class="scroll"><table><caption>Hydrogen Larmor frequency</caption><thead><tr><th>B0 (T)</th><th>f0 (MHz)</th><th>Excess (ppm)</th></tr></thead><tbody><tr><td>1.5</td><td>63.9</td><td>4.9</td></tr><tr><td>3</td><td>127.7</td><td>9.9</td></tr><tr><td>7</td><td>298.0</td><td>23.1</td></tr></tbody></table></div>
+        <div class="scroll"><table><caption>Perfusion (pCASL, 3 T)</caption><thead><tr><th>Tissue</th><th>CBF (ml/100 g/min)</th><th>Transit (ms)</th></tr></thead><tbody><tr><td>Grey matter</td><td>60</td><td>1200</td></tr><tr><td>White matter</td><td>20</td><td>1600</td></tr><tr><td>CSF</td><td>0</td><td>–</td></tr></tbody></table></div>
+        <div class="scroll"><table><caption>pCASL settings</caption><thead><tr><th>Setting</th><th>Value</th></tr></thead><tbody><tr><td>Label duration τ</td><td>1800 ms</td></tr><tr><td>PLD (adults)</td><td>1800 ms</td></tr><tr><td>Blood T1</td><td>1650 ms</td></tr><tr><td>Efficiency α · λ</td><td>0.85 · 0.9 ml/g</td></tr></tbody></table></div>
+        <div class="scroll"><table><caption>fMRI on the bench</caption><thead><tr><th>Setting</th><th>Value</th></tr></thead><tbody><tr><td>TR · run</td><td>2 s · 160 s (80 scans)</td></tr><tr><td>Canonical HRF</td><td>peak 5 s, undershoot ~16 s</td></tr><tr><td>BOLD, 1 s flash</td><td>~1%, peak 3.5 s after onset</td></tr><tr><td>BOLD, 20 s block</td><td>~2.5%</td></tr><tr><td>High-pass filter</td><td>128 s</td></tr><tr><td>Map</td><td>3 mm voxels, 6 mm FWHM</td></tr></tbody></table></div>
+        <div class="scroll"><table><caption>Diffusion (3 T, body temperature)</caption><thead><tr><th>Tissue</th><th>ADC (×10⁻³ mm²/s)</th><th>Echo left at b = 1000</th></tr></thead><tbody><tr><td>CSF</td><td>3.0</td><td>5%</td></tr><tr><td>Grey matter</td><td>0.8</td><td>45%</td></tr><tr><td>White matter (mean)</td><td>0.7</td><td>50%</td></tr><tr><td>Acute infarct (grey)</td><td>0.44</td><td>64%</td></tr></tbody></table></div>
+        <div class="scroll"><table><caption>Diffusion tensor on the bench</caption><thead><tr><th>Specimen</th><th>λ∥ / λ⊥</th><th>FA</th><th>MD</th></tr></thead><tbody><tr><td>Fibre bundle</td><td>1.7 / 0.3</td><td>0.80</td><td>0.77</td></tr><tr><td>Two crossing bundles</td><td>1.7 / 0.3 each</td><td>0.45</td><td>0.69</td></tr><tr><td>Grey matter</td><td>0.85 / 0.78</td><td>0.05</td><td>0.80</td></tr><tr><td>CSF</td><td>3.0 / 3.0</td><td>0</td><td>3.0</td></tr></tbody></table></div>
+      </div>
+      <p class="small ref-note">Diffusion weighting uses δ = 20 ms and Δ = 40 ms, so b = 1000 s/mm² needs a 32 mT/m gradient. The BOLD amplitudes come from the balloon model with the parameters of Friston et al. (2000), whose response peaks earlier than the 4–6 s typical in people; the design and GLM figures use SPM's canonical HRF. Tissue values are approximate; published measurements vary by 10–20% with method and subject. Proton density is relative to CSF. T2* assumes a well-shimmed brain (1/T2* = 1/T2 + 1/160 ms). The IR null is the inversion time that blanks each tissue at TR 9 s. The excess is the fraction of protons in the lower-energy state beyond half, at body temperature (310 K).</p>
+    </div>
+    <div id="sub-glossary" hidden>
+      <label class="small" for="gloss-search">Find a term</label><br>
+      <input class="gloss-search" id="gloss-search" type="search" placeholder="T2*, b-value, FDR…" autocomplete="off">
+      <dl class="gloss" id="gloss-list"></dl>
+    </div>
+    <div id="sub-credits" hidden>
+      <div class="credits">
+        <p>The order of the physics unit follows the Johns Hopkins Radiology video <em>MRI Physics: Magnetic Resonance and Spin Echo Sequences</em> (animation © 2022 Emily Wu). The drawings here are new.</p>
+        <p>MNI152 ICBM 2009c Nonlinear Asymmetric template (Fonov et al., NeuroImage 2011), tissue maps via TemplateFlow. Copyright (C) 1993–2004 Louis Collins, McConnell Brain Imaging Centre, Montreal Neurological Institute, McGill University.</p>
+        <p>ASL signal model: Buxton et al., Magnetic Resonance in Medicine 1998; settings from the consensus recommendations of Alsop et al., Magnetic Resonance in Medicine 2015.</p>
+        <p>BOLD balloon model: Buxton, Wong and Frank, Magnetic Resonance in Medicine 1998, in the form and with the parameters of Friston et al., NeuroImage 2000. Canonical HRF as in SPM (Friston et al., NeuroImage 1998). False discovery rate: Benjamini and Hochberg, Journal of the Royal Statistical Society B 1995. The fMRI time courses and maps are simulated.</p>
+        <p>Diffusion: Stejskal and Tanner, Journal of Chemical Physics 1965; first diffusion images of the brain, Le Bihan et al., Radiology 1986; early detection of ischaemia with diffusion-weighted MRI, Moseley et al., Magnetic Resonance in Medicine 1990. The infarct and its time course are illustrative.</p>
+        <p>Fig 13's brain films use the Oxford-MM-1 DTI template (Arthofer et al., Imaging Neuroscience 2024, doi:10.1162/imag_a_00361), built from UK Biobank data and shared under CC BY-SA 4.0; one slice at z = +14 mm in FSL's MNI152 space. Fig 13 is therefore shared under CC BY-SA 4.0.</p>
+        <p>Instruments drawn with the Anatomy isometric kit, MIT License. Notes, missions and progress stay in your browser; questions to the tutor go to Claude on your own account.</p>
+      </div>
+    </div>
+  </section>
+</main>
+
+<div class="toast" id="toast" role="status" aria-live="polite" hidden>
+  <span class="tick" aria-hidden="true"><svg viewBox="0 0 16 16" fill="none" stroke="var(--sheet)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 8.5l3 3 6-7"/></svg></span>
+  <div><b id="toast-title">Mission complete</b><span id="toast-text"></span></div>
+</div>
+
+<div class="help" id="help" hidden>
+  <div class="help-card" role="dialog" aria-modal="true" aria-labelledby="help-title">
+    <h2 id="help-title" style="font-size:24px">Keys</h2>
+    <dl>
+      <dt><kbd>[</kbd> <kbd>]</kbd></dt><dd>Previous and next lab</dd>
+      <dt><kbd>?</kbd></dt><dd>Show or hide this list</dd>
+      <dt>Click</dt><dd>Gives the instrument the keyboard; its own keys are in its top corner</dd>
+      <dt><kbd>Esc</kbd></dt><dd>Close</dd>
+    </dl>
+    <p class="small">Instructors who can edit this page see a Present button. While it is on, students who choose Follow lecture move to the lab you open.</p>
+    <button class="btn small-btn" id="help-close" type="button" style="justify-self:start">Close</button>
+  </div>
+</div>
+
+<script src="labs.js" charset="utf-8"></script>
+<script>
+(() => {
+  const LABS = window.BENCH_LABS || [], UNITS = window.BENCH_UNITS || [], GLOSSARY = window.BENCH_GLOSSARY || [];
+  const root = document.documentElement;
+  const $ = (id) => document.getElementById(id);
+  const media = matchMedia("(prefers-color-scheme: dark)");
+  const isDark = () => (root.dataset.theme ? root.dataset.theme === "dark" : media.matches);
+  const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+  const TICK = '<svg viewBox="0 0 16 16" fill="none" stroke="var(--sheet)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 8.5l3 3 6-7"/></svg>';
+
+  // ── per-viewer progress and notes (a convenience: the page works without storage) ──
+  const KEY = "mri-bench:v1";
+  let state = { missions: {}, quiz: {}, notes: {}, last: null, unitLast: {} };
+  try { const s = JSON.parse(localStorage.getItem(KEY) || "null"); if (s && typeof s === "object") state = Object.assign(state, s); } catch (e) {}
+  let saveTimer = 0;
+  const save = () => { clearTimeout(saveTimer); saveTimer = setTimeout(() => { try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {} }, 250); };
+
+  const idOf = (lab) => "fig-" + lab.n;
+  const labById = (id) => LABS.find((l) => idOf(l) === id);
+  const unitById = (u) => UNITS.find((x) => x.id === u);
+  const REF = ["reference", "glossary", "credits"];
+  const ROUTES = new Set(["home", "coordinates", ...REF, ...LABS.map(idOf)]);
+  const mKey = (lab, m) => idOf(lab) + ":" + m.id;
+  const doneIn = (lab) => lab.missions.filter((m) => state.missions[mKey(lab, m)]).length;
+  const TOTAL = LABS.reduce((a, l) => a + l.missions.length, 0);
+  const unitOf = (r) => (r.startsWith("fig-") ? labById(r).unit : r === "coordinates" ? "tools" : REF.includes(r) ? "reference" : "home");
+  const pipsHtml = (lab) => '<span class="pips" aria-hidden="true">' + lab.missions.map((m) => '<span class="pip' + (state.missions[mKey(lab, m)] ? " done" : "") + '"></span>').join("") + "</span>";
+
+  // ── counts, home ──
+  function renderCounts() {
+    let all = 0;
+    for (const u of UNITS) {
+      const labs = LABS.filter((l) => l.unit === u.id);
+      const done = labs.reduce((a, l) => a + doneIn(l), 0), total = labs.reduce((a, l) => a + l.missions.length, 0);
+      all += done;
+      document.querySelectorAll('[data-count="' + u.id + '"]').forEach((el) => (el.textContent = done + "/" + total));
+    }
+    $("meter-fill").style.width = (100 * all) / TOTAL + "%";
+    $("meter-text").textContent = all + " of " + TOTAL + " missions complete";
+    const next = state.last && labById(state.last) ? state.last : "fig-1";
+    const nl = labById(next);
+    $("continue-btn").href = "#" + next;
+    $("continue-btn").textContent = state.last ? "Continue with Fig " + nl.n + ", " + nl.name : "Start with Fig 1";
+    for (const u of UNITS) {
+      const a = document.querySelector('.units a[data-tab="' + u.id + '"]');
+      const lastIn = state.unitLast[u.id];
+      if (a) a.href = "#" + (lastIn && labById(lastIn) ? lastIn : idOf(LABS.find((l) => l.unit === u.id)));
+    }
+  }
+  function renderHome() {
+    $("home-units").innerHTML = UNITS.map((u, i) => {
+      const labs = LABS.filter((l) => l.unit === u.id);
+      return '<section class="unit-block"><div class="unit-head"><p class="eyebrow">Unit ' + (i + 1) + '</p><h2>' + esc(u.title) + "</h2><p>" + esc(u.sub) + '</p><span class="count" data-count="' + u.id + '"></span></div><div class="cards">' +
+        labs.map((l) => '<a class="card" href="#' + idOf(l) + '"><span class="thumb"><img class="th-light" src="thumbs/fig-' + l.n + '-light.jpg" alt="" loading="lazy" width="600" height="404"><img class="th-dark" src="thumbs/fig-' + l.n + '-dark.jpg" alt="" loading="lazy" width="600" height="404"></span>' +
+          '<span class="card-body"><span class="card-top"><span class="card-no">FIG ' + l.n + "</span>" + pipsHtml(l) + "</span><h3>" + esc(l.name) + "</h3><p>" + esc(l.title) + '</p><span class="tags">' + esc(l.tags) + "</span></span></a>").join("") +
+        "</div></section>";
+    }).join("");
+    renderCounts();
+  }
+
+  // ── lab strip ──
+  function renderStrip(unit, current) {
+    const strip = $("strip");
+    const labs = LABS.filter((l) => l.unit === unit);
+    strip.hidden = !labs.length;
+    if (!labs.length) return;
+    $("strip-inner").innerHTML = labs.map((l) => '<a class="chip" href="#' + idOf(l) + '"' + (idOf(l) === current ? ' aria-current="page"' : "") + '><span class="chip-no">' + l.n + "</span>" + esc(l.name) + pipsHtml(l) + "</a>").join("");
+    const cur = $("strip-inner").querySelector('[aria-current="page"]');
+    if (cur) cur.scrollIntoView({ block: "nearest", inline: "nearest" });
+  }
+
+  // ── panel tabs ──
+  const TABS = ["guide", "missions", "check", "physics", "notes", "ask"];
+  let activeTab = "guide";
+  function selectTab(name, focus) {
+    activeTab = name;
+    for (const t of TABS) {
+      const b = $("tab-" + t), p = $("pane-" + t);
+      const on = t === name;
+      b.setAttribute("aria-selected", String(on));
+      b.tabIndex = on ? 0 : -1;
+      p.hidden = !on;
+    }
+    if (focus) $("tab-" + name).focus();
+  }
+  $("panel-tabs").addEventListener("click", (e) => { const b = e.target.closest("[role=tab]"); if (b) selectTab(b.id.slice(4)); });
+  $("panel-tabs").addEventListener("keydown", (e) => {
+    if (e.key !== "ArrowRight" && e.key !== "ArrowLeft") return;
+    const shown = TABS.filter((t) => !$("tab-" + t).hidden);
+    const i = shown.indexOf(activeTab);
+    selectTab(shown[(i + (e.key === "ArrowRight" ? 1 : shown.length - 1)) % shown.length], true);
+    e.preventDefault();
+  });
+
+  // ── the instrument frames: kept alive for the last few labs so their state survives a tab change ──
+  const frames = new Map();
+  const MAX_FRAMES = 4;
+  const srcFor = (lab) => "figures/" + lab.file + (isDark() ? "" : "-light") + ".html";
+  let current = null;
+  const currentLab = () => (current && current.startsWith("fig-") ? labById(current) : null);
+
+  function fallbackSize(f) {
+    const w = $("frame-host").clientWidth || 700;
+    f.el.style.height = Math.round(Math.min(650, w - 32) * 0.8 + 140) + "px";
+  }
+  function attach(lab, f) {
+    f.ok = false; f.doc = null; f.info = null;
+    try {
+      const doc = f.el.contentDocument;
+      if (!doc || !doc.body || !doc.querySelector(".iso-stage")) throw new Error("no access");
+      f.doc = doc; f.ok = true;
+      const style = doc.createElement("style");
+      style.textContent = ".iso-legend{display:none!important}.iso-page{width:min(900px,100% - 12px)!important;margin:6px auto!important}body{background:transparent!important}@media (max-width:560px){[data-corner=readout]{display:none!important}}";
+      doc.head.append(style);
+      f.info = {
+        caption: (doc.querySelector(".iso-caption") || {}).textContent || "",
+        keys: [...doc.querySelectorAll(".iso-key")].map((k) => k.textContent.trim()).filter(Boolean),
+      };
+      const mark = () => { f.lastInput = Date.now(); };
+      for (const t of ["pointerdown", "pointermove", "keydown", "wheel", "touchstart"]) doc.addEventListener(t, mark, { capture: true, passive: true });
+      const fit = () => { const h = Math.ceil(doc.documentElement.scrollHeight); if (h > 160) f.el.style.height = h + "px"; };
+      fit();
+      if ("ResizeObserver" in window) new ResizeObserver(fit).observe(doc.body);
+    } catch (e) {
+      f.ok = false;
+      fallbackSize(f);
+    }
+    if (currentLab() === lab) { renderPhysics(lab); renderMissions(lab); }
+  }
+  function showFrame(lab) {
+    const id = idOf(lab);
+    let f = frames.get(id);
+    if (f) { frames.delete(id); frames.set(id, f); }
+    else {
+      const el = document.createElement("iframe");
+      el.title = "Fig " + lab.n + ", " + lab.name;
+      f = { el, dark: isDark(), ok: false, doc: null, info: null, lastInput: 0 };
+      fallbackSize(f);
+      el.addEventListener("load", () => attach(lab, f));
+      el.src = srcFor(lab);
+      frames.set(id, f);
+      $("frame-host").append(el);
+      while (frames.size > MAX_FRAMES) { const [oldId, old] = frames.entries().next().value; old.el.remove(); frames.delete(oldId); }
+    }
+    for (const [k, g] of frames) g.el.hidden = k !== id;
+    if (f.dark !== isDark()) { f.dark = isDark(); f.ok = false; f.el.src = srcFor(lab); }
+  }
+  function retheme() {
+    for (const [id, f] of frames) {
+      if (f.dark === isDark()) continue;
+      f.dark = isDark(); f.ok = false;
+      f.el.src = srcFor(labById(id));
+    }
+    syncThemeButton();
+  }
+
+  // ── lab panes ──
+  function renderGuide(lab) {
+    $("guide-notice").innerHTML = lab.notice.map((t) => "<li>" + t + "</li>").join("");
+    $("guide-try").innerHTML = lab.try.map((t) => "<li>" + t + "</li>").join("");
+  }
+  function renderMissions(lab, just) {
+    const f = frames.get(idOf(lab));
+    const manual = f && f.doc === null && f.el.contentDocument === null;
+    const done = doneIn(lab);
+    $("mission-badge").textContent = done + "/" + lab.missions.length;
+    $("mission-badge").classList.toggle("full", done === lab.missions.length);
+    $("missions-note").textContent = manual
+      ? "This view cannot read the instrument, so tick each mission yourself when you reach it."
+      : "Reach each state on the instrument. The bench ticks a mission when it sees it, but only while you are operating the instrument.";
+    $("missions-list").innerHTML = lab.missions.map((m) => {
+      const isDone = !!state.missions[mKey(lab, m)];
+      return '<li class="mission' + (isDone ? " done" : "") + (just === m.id ? " just" : "") + '"><span class="tick" aria-hidden="true">' + TICK + '</span><span class="mission-text">' + esc(m.text) + '<span class="visually-hidden">' + (isDone ? " (complete)" : "") + "</span></span>" +
+        (manual ? '<button class="manual" type="button" data-mission="' + m.id + '">' + (isDone ? "Undo" : "Done") + "</button>" : "<span></span>") + "</li>";
+    }).join("");
+  }
+  $("missions-list").addEventListener("click", (e) => {
+    const b = e.target.closest("[data-mission]");
+    const lab = currentLab();
+    if (!b || !lab) return;
+    const k = idOf(lab) + ":" + b.dataset.mission;
+    if (state.missions[k]) delete state.missions[k]; else state.missions[k] = Date.now();
+    save(); renderMissions(lab); renderCounts(); renderStrip(lab.unit, current);
+  });
+  function renderCheck(lab) {
+    $("check-list").innerHTML = lab.quiz.map((q, qi) => {
+      const k = idOf(lab) + ":q" + qi;
+      const pick = state.quiz[k];
+      const answered = pick !== undefined && pick !== null;
+      return '<div class="q" data-q="' + qi + '"><p class="q-text">' + esc(q.q) + '</p><div class="opts">' +
+        q.options.map((o, oi) => '<button class="opt' + (answered && oi === q.answer ? " right" : "") + (answered && oi === pick && pick !== q.answer ? " wrong" : "") + '" type="button" data-opt="' + oi + '"' + (answered ? " disabled" : "") + ">" + esc(o) + "</button>").join("") +
+        "</div>" + (answered ? '<p class="why"><b>' + (pick === q.answer ? "Right. " : "Not quite. ") + "</b>" + esc(q.why) + '</p><button class="q-retry" type="button" data-retry="' + qi + '">Try again</button>' : "") + "</div>";
+    }).join("");
+  }
+  $("check-list").addEventListener("click", (e) => {
+    const lab = currentLab();
+    if (!lab) return;
+    const opt = e.target.closest("[data-opt]"), retry = e.target.closest("[data-retry]");
+    if (opt) { const qi = +opt.closest("[data-q]").dataset.q; state.quiz[idOf(lab) + ":q" + qi] = +opt.dataset.opt; }
+    else if (retry) delete state.quiz[idOf(lab) + ":q" + retry.dataset.retry];
+    else return;
+    save(); renderCheck(lab);
+  });
+  function renderPhysics(lab) {
+    const f = frames.get(idOf(lab));
+    const info = f && f.info;
+    if (!info || !info.caption) {
+      $("physics-keys").innerHTML = "<li>" + esc(lab.tags) + "</li>";
+      $("physics-text").innerHTML = "<p>" + (f && !f.ok && f.el.contentDocument === null ? "The full physics notes are under the instrument: scroll inside it to read them." : "Loading the instrument's notes…") + "</p>";
+      return;
+    }
+    $("physics-keys").innerHTML = info.keys.map((k) => "<li>" + esc(k) + "</li>").join("");
+    const cut = info.caption.search(/\bModel:|The film is a synthetic image|Diffusion data:/);
+    const main = cut > 0 ? info.caption.slice(0, cut) : info.caption;
+    const rest = cut > 0 ? info.caption.slice(cut) : "";
+    $("physics-text").innerHTML = "<p>" + esc(main.trim()) + "</p>" + (rest ? '<p class="model">' + esc(rest.trim()) + "</p>" : "");
+  }
+  function renderNotes(lab) {
+    $("notes-area").value = state.notes[idOf(lab)] || "";
+    $("notes-status").textContent = "";
+    $("notebook-fallback").hidden = true;
+  }
+  $("notes-area").addEventListener("input", () => {
+    const lab = currentLab();
+    if (!lab) return;
+    state.notes[idOf(lab)] = $("notes-area").value;
+    save();
+    $("notes-status").textContent = "Kept in this browser";
+  });
+
+  function openLab(lab) {
+    const u = unitById(lab.unit);
+    $("lab-eyebrow").textContent = "Fig " + lab.n + " · " + u.title;
+    $("lab-title").textContent = lab.title;
+    $("lab-sub").textContent = lab.name + " · " + lab.tags;
+    const i = LABS.indexOf(lab), prev = LABS[i - 1], next = LABS[i + 1];
+    $("prev-lab").href = prev ? "#" + idOf(prev) : "#home";
+    $("prev-lab").textContent = prev ? "← Fig " + prev.n : "← Bench";
+    $("next-lab").href = next ? "#" + idOf(next) : "#reference";
+    $("next-lab").textContent = next ? "Fig " + next.n + " →" : "Reference →";
+    renderGuide(lab); renderCheck(lab); renderNotes(lab); renderAsk(lab);
+    showFrame(lab);
+    renderMissions(lab); renderPhysics(lab);
+    $("ticker").textContent = "waiting for the instrument";
+    state.last = idOf(lab); state.unitLast[lab.unit] = idOf(lab); save();
+  }
+
+  // ── watch the instrument: mirror its readout and tick missions the student reaches ──
+  let toastTimer = 0;
+  function toast(title, text) {
+    $("toast-title").textContent = title;
+    $("toast-text").textContent = text;
+    const t = $("toast");
+    t.hidden = false; t.classList.remove("show"); void t.offsetWidth; t.classList.add("show");
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => (t.hidden = true), 3800);
+  }
+  setInterval(() => {
+    const lab = currentLab();
+    if (!lab) return;
+    const f = frames.get(idOf(lab));
+    if (!f || !f.ok || !f.doc) return;
+    let ro = "", aria = "";
+    try {
+      ro = (f.doc.querySelector("[data-readout]") || {}).textContent || "";
+      const stage = f.doc.querySelector(".iso-stage");
+      aria = (stage && stage.getAttribute("aria-valuetext")) || "";
+    } catch (e) { return; }
+    if (ro && $("ticker").textContent !== ro) $("ticker").textContent = ro;
+    if (Date.now() - f.lastInput > 9000) return; // the demonstration on its own never counts
+    const r = ro + " | " + aria;
+    let just = null;
+    for (const m of lab.missions) {
+      const k = mKey(lab, m);
+      let hit = false;
+      try { hit = !state.missions[k] && m.test(r); } catch (e) {}
+      if (hit) { state.missions[k] = Date.now(); just = m.id; toast("Mission complete", m.text); }
+    }
+    if (just) {
+      save(); renderMissions(lab, just); renderCounts(); renderStrip(lab.unit, current);
+      if (doneIn(lab) === lab.missions.length) setTimeout(() => toast("Lab complete", "All three missions on " + lab.name + " are done."), 1800);
+    }
+  }, 350);
+
+  // ── notebook export ──
+  function notebookText() {
+    const date = new Date().toISOString().slice(0, 10);
+    let md = "# MRI Physics Bench: lab notebook\n\nSaved " + date + ". " + LABS.reduce((a, l) => a + doneIn(l), 0) + " of " + TOTAL + " missions complete.\n";
+    for (const lab of LABS) {
+      const notes = (state.notes[idOf(lab)] || "").trim();
+      const done = doneIn(lab);
+      const answered = lab.quiz.map((q, qi) => state.quiz[idOf(lab) + ":q" + qi]).filter((v) => v !== undefined && v !== null);
+      if (!notes && !done && !answered.length) continue;
+      md += "\n## Fig " + lab.n + " · " + lab.name + "\n\n";
+      md += lab.missions.map((m) => "- [" + (state.missions[mKey(lab, m)] ? "x" : " ") + "] " + m.text).join("\n") + "\n";
+      lab.quiz.forEach((q, qi) => { const p = state.quiz[idOf(lab) + ":q" + qi]; if (p !== undefined && p !== null) md += "\n" + q.q + " " + q.options[p] + (p === q.answer ? " (right)" : " (answer: " + q.options[q.answer] + ")") + "\n"; });
+      if (notes) md += "\n" + notes + "\n";
+    }
+    return md;
+  }
+  $("copy-notebook").addEventListener("click", () => {
+    const text = notebookText();
+    const fallback = () => { const ta = $("notebook-fallback"); ta.hidden = false; ta.value = text; ta.focus(); ta.select(); $("notes-status").textContent = "Selected: press Ctrl+C or Cmd+C to copy"; };
+    try {
+      navigator.clipboard.writeText(text).then(() => ($("notes-status").textContent = "Notebook copied"), fallback);
+    } catch (e) { fallback(); }
+  });
+
+  // ── router ──
+  function show(r) {
+    const view = r.startsWith("fig-") ? "lab" : REF.includes(r) ? "reference" : r;
+    current = r;
+    for (const v of ["home", "lab", "coordinates", "reference"]) $("view-" + v).hidden = v !== view;
+    const unit = unitOf(r);
+    document.querySelectorAll(".units a").forEach((a) => (a.dataset.tab === unit ? a.setAttribute("aria-current", "page") : a.removeAttribute("aria-current")));
+    renderStrip(unit, r);
+    if (view === "lab") openLab(labById(r));
+    else for (const f of frames.values()) f.el.hidden = true;
+    if (view === "reference") {
+      for (const s of REF) $("sub-" + s).hidden = s !== r;
+      document.querySelectorAll(".subtabs a").forEach((a) => (a.dataset.sub === r ? a.setAttribute("aria-current", "page") : a.removeAttribute("aria-current")));
+    }
+    if (view === "home") renderHome();
+    window.scrollTo(0, 0);
+    live.onRoute(r);
+  }
+  const route = () => { const r = (location.hash || "").slice(1); show(ROUTES.has(r) ? r : "home"); };
+  addEventListener("hashchange", route);
+
+  // ── keys, help, theme ──
+  const help = $("help");
+  const toggleHelp = (on) => { help.hidden = !on; if (on) $("help-close").focus(); };
+  $("help-btn").addEventListener("click", () => toggleHelp(true));
+  $("help-close").addEventListener("click", () => toggleHelp(false));
+  help.addEventListener("click", (e) => { if (e.target === help) toggleHelp(false); });
+  addEventListener("keydown", (e) => {
+    const t = e.target;
+    if (t && (t.closest("input, textarea, select, [contenteditable]") || e.metaKey || e.ctrlKey || e.altKey)) return;
+    if (e.key === "Escape" && !help.hidden) { toggleHelp(false); return; }
+    if (e.key === "?") { toggleHelp(help.hidden); e.preventDefault(); return; }
+    const lab = currentLab();
+    if (!lab || (e.key !== "[" && e.key !== "]")) return;
+    const i = LABS.indexOf(lab), to = LABS[i + (e.key === "]" ? 1 : -1)];
+    if (to) location.hash = idOf(to);
+    e.preventDefault();
+  });
+  function syncThemeButton() { $("theme-btn").setAttribute("aria-label", isDark() ? "Switch to the light theme" : "Switch to the dark theme"); }
+  $("theme-btn").addEventListener("click", () => { root.dataset.theme = isDark() ? "light" : "dark"; });
+  media.addEventListener("change", retheme);
+  new MutationObserver(retheme).observe(root, { attributes: true, attributeFilter: ["data-theme"] });
+  syncThemeButton();
+
+  // ── glossary ──
+  function renderGlossary(qs) {
+    const q = (qs || "").trim().toLowerCase();
+    const rows = GLOSSARY.filter(([t, d]) => !q || t.toLowerCase().includes(q) || d.toLowerCase().includes(q));
+    $("gloss-list").innerHTML = rows.length
+      ? rows.map(([t, d, n]) => "<div><dt>" + esc(t) + (n ? '<a href="#fig-' + n + '">Fig ' + n + "</a>" : '<a href="#coordinates">Tools</a>') + "</dt><dd>" + esc(d) + "</dd></div>").join("")
+      : '<div><dt>No match</dt><dd>Try a shorter word, such as "echo" or "flow".</dd></div>';
+  }
+  $("gloss-search").addEventListener("input", (e) => renderGlossary(e.target.value));
+  renderGlossary("");
+
+  // ── Ask: a tutor that sees the lab and the instrument's reading (sample capability, on the viewer's account) ──
+  const chats = {};
+  let sample = null, askCtl = null;
+  function renderAsk(lab) {
+    if (!sample) return;
+    $("ask-suggest").innerHTML = lab.asks.map((q) => '<button type="button">' + esc(q) + "</button>").join("");
+    const log = chats[idOf(lab)] || [];
+    $("chat").innerHTML = log.map((m) => '<div class="msg ' + (m.role === "user" ? "me" : "bot") + '">' + esc(m.shown || m.content) + "</div>").join("");
+    $("ask-status").textContent = "";
+  }
+  function rulesFor(lab) {
+    const f = frames.get(idOf(lab));
+    const caption = ((f && f.info && f.info.caption) || "").slice(0, 3500);
+    return "You are a patient teaching assistant in a university neuroimaging course. A student is working on the MRI Physics Bench, an app of interactive instruments. They are on Fig " + lab.n + ", the " + lab.name + ": \"" + lab.title + "\".\n\n" +
+      "What the lab asks them to notice:\n- " + lab.notice.map((t) => t.replace(/<[^>]+>/g, "")).join("\n- ") + "\n\n" +
+      "How the instrument is operated:\n- " + lab.try.map((t) => t.replace(/<[^>]+>/g, "")).join("\n- ") + "\n\n" +
+      (caption ? "The instrument's own physics notes:\n" + caption + "\n\n" : "") +
+      "Answer the student's questions accurately and in plain language, with correct units, in under about 180 words unless they ask for more. Where it helps, suggest one thing to try on the instrument. Write plain text without Markdown headings or tables. If a question has nothing to do with MRI or neuroimaging, say so briefly and steer back.";
+  }
+  async function ask(question) {
+    const lab = currentLab();
+    if (!sample || !lab || !question.trim() || askCtl) return;
+    const id = idOf(lab);
+    const log = (chats[id] = chats[id] || []);
+    const reading = $("ticker").textContent;
+    log.push({ role: "user", content: question + (reading && !/waiting/.test(reading) ? "\n\n(The instrument currently reads: " + reading + ")" : ""), shown: question });
+    renderAsk(lab);
+    const bubble = document.createElement("div");
+    bubble.className = "msg bot thinking";
+    bubble.textContent = "Thinking…";
+    $("chat").append(bubble);
+    $("chat").scrollTop = $("chat").scrollHeight;
+    $("ask-input").value = "";
+    $("ask-send").disabled = true; $("ask-stop").hidden = false; $("ask-status").textContent = "";
+    askCtl = new AbortController();
+    const turns = [{ role: "user", content: rulesFor(lab) }, ...log.slice(-8).map(({ role, content }) => ({ role, content }))];
+    try {
+      const { text, truncated } = await sample(turns, { signal: askCtl.signal, cache: false, onText: ({ text }) => { bubble.classList.remove("thinking"); bubble.textContent = text; $("chat").scrollTop = $("chat").scrollHeight; } });
+      log.push({ role: "assistant", content: text });
+      if (truncated) $("ask-status").textContent = "The answer was cut short. Ask for less at a time.";
+    } catch (e) {
+      const code = e && e.code;
+      if (e && e.text) { bubble.classList.remove("thinking"); bubble.textContent = e.text; log.push({ role: "assistant", content: e.text }); }
+      else bubble.remove();
+      if (["not_granted", "sampling_disabled", "not_declared", "capability_disabled", "capability_removed"].includes(code)) {
+        $("ask-status").textContent = "Asking Claude is not available in this view.";
+        $("tab-ask").hidden = true; selectTab("guide"); sample = null;
+      } else if (code === "rate_limited") $("ask-status").textContent = "Too many questions at once. Try again in a minute.";
+      else if (code === "session_expired") $("ask-status").textContent = "Sign in to Claude again to ask questions.";
+      else if (code === "refused") $("ask-status").textContent = "Claude did not answer that. Try asking it another way.";
+      else if (code !== "cancelled") $("ask-status").textContent = "The answer was interrupted. Ask again.";
+      if (log.length && log[log.length - 1].role === "user" && !(e && e.text)) log.pop();
+    } finally {
+      askCtl = null;
+      $("ask-send").disabled = false; $("ask-stop").hidden = true;
+      if (currentLab() === lab) renderAsk(lab);
+    }
+  }
+  $("ask-form").addEventListener("submit", (e) => { e.preventDefault(); ask($("ask-input").value); });
+  $("ask-input").addEventListener("keydown", (e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); ask($("ask-input").value); } });
+  $("ask-stop").addEventListener("click", () => askCtl && askCtl.abort());
+  $("ask-suggest").addEventListener("click", (e) => { const b = e.target.closest("button"); if (b) ask(b.textContent); });
+
+  // ── live lecture: the instructor presents, students may follow (room capability) ──
+  const live = (() => {
+    let room = null, presenting = false, following = false, presenter = null, presenterView = null, myPeer = null, beat = 0;
+    const api = { onRoute() {} };
+    const valid = (v) => typeof v === "string" && ROUTES.has(v);
+    function setFollow(on) {
+      following = on && !!presenter;
+      $("follow-btn").setAttribute("aria-pressed", String(following));
+      $("follow-label").textContent = following ? "Following lecture" : "Follow lecture";
+      room && room.presence({ follow: following ? { of: presenter } : null }).catch(() => {});
+      if (following && presenterView && presenterView !== current) location.hash = presenterView;
+    }
+    function updatePresenterLabel() {
+      if (!presenting || !room) return;
+      const n = room.peers().filter((p) => p.presence && p.presence.follow && p.presence.follow.of === myPeer).length;
+      $("present-label").textContent = "Presenting · " + n + " following";
+    }
+    function emitView() { if (presenting && room) room.emit("lab", { view: current }).catch(() => {}); }
+    api.onRoute = (r) => {
+      if (presenting) { emitView(); room.presence({ presenting: true, view: r }).catch(() => {}); }
+      else if (following && presenterView && r !== presenterView && !api.fromLive) setFollow(false);
+      api.fromLive = false;
+    };
+    api.start = async () => {
+      if (!window.claude || typeof window.claude.use !== "function") return;
+      room = await window.claude.use("room");
+      if (!room) return;
+      const user = await window.claude.use("user");
+      const canPresent = user ? await user.canEdit() : false;
+      $("live").hidden = false;
+      if (canPresent) {
+        $("present-btn").hidden = false;
+        $("present-btn").addEventListener("click", () => {
+          presenting = !presenting;
+          $("present-btn").setAttribute("aria-pressed", String(presenting));
+          $("present-btn").classList.toggle("on-air", presenting);
+          $("present-label").textContent = presenting ? "Presenting" : "Present";
+          room.presence({ presenting, view: presenting ? current : null }).catch(() => {});
+          clearInterval(beat);
+          if (presenting) { emitView(); beat = setInterval(emitView, 12000); updatePresenterLabel(); }
+        });
+      }
+      $("follow-btn").addEventListener("click", () => setFollow(!following));
+      room.on("lab", (msg) => {
+        if (msg.isMe || !msg.data || !valid(msg.data.view)) return;
+        presenter = msg.peer; presenterView = msg.data.view;
+        $("follow-btn").hidden = false;
+        if (following && current !== presenterView) { api.fromLive = true; location.hash = presenterView; }
+      });
+      room.onPeers((change) => {
+        const me = change.peers.find((p) => p.isMe && p.sameTab);
+        if (me) myPeer = me.peer;
+        if (presenting && change.joined.length) emitView();
+        if (presenter && change.left.some((p) => p.peer === presenter)) { presenter = null; presenterView = null; setFollow(false); $("follow-btn").hidden = true; }
+        updatePresenterLabel();
+      });
+    };
+    return api;
+  })();
+
+  // ── capabilities light up when the viewer can use them ──
+  (async () => {
+    if (!window.claude || typeof window.claude.use !== "function") return;
+    try {
+      sample = await window.claude.use("sample");
+      if (sample) { $("tab-ask").hidden = false; const lab = currentLab(); if (lab) renderAsk(lab); }
+    } catch (e) {}
+    try {
+      const downloads = await window.claude.use("downloads");
+      if (downloads) {
+        $("save-notebook").hidden = false;
+        $("save-notebook").addEventListener("click", async () => {
+          try {
+            await downloads.save({ filename: "mri-bench-notebook.md", data: notebookText() });
+            $("notes-status").textContent = "Notebook saved";
+          } catch (e) {
+            if (e && e.code === "declined") $("notes-status").textContent = "Not saved";
+            else if (e && e.code === "rate_limited") $("notes-status").textContent = "A save is already waiting for you";
+            else { $("save-notebook").hidden = true; $("notes-status").textContent = "Saving files is not available here; copy the notebook instead"; }
+          }
+        });
+      }
+    } catch (e) {}
+    try { await live.start(); } catch (e) {}
+  })();
+
+  renderHome();
+  route();
+})();
+</script>
+<script src="data/mni152-slice.js" charset="utf-8"></script>
+<script>
+// Voxels and millimetres: the stored image is radiological (column 0 is the subject's right).
+// For image pixel (row, col): i = i_last − col, j = j_last − row, k = k; MNI (mm) = affine · [i, j, k, 1].
+(() => {
+  const S = window.MNI_SLICE;
+  const canvas = document.getElementById("coords-canvas");
+  if (!S || !canvas) return;
+  const unpack = (b64) => Uint8Array.from(atob(b64), (c) => c.charCodeAt(0));
+  const gm = unpack(S.gm), wm = unpack(S.wm), csf = unpack(S.csf);
+  const W = S.width, H = S.height, Z = 3, A = S.affine;
+  canvas.width = W * Z;
+  canvas.height = H * Z;
+  const ctx = canvas.getContext("2d");
+  const base = document.createElement("canvas");
+  base.width = W;
+  base.height = H;
+  const bctx = base.getContext("2d");
+  const img = bctx.createImageData(W, H);
+  for (let p = 0; p < W * H; p++) {
+    const v = Math.min(255, Math.round(wm[p] * 1.0 + gm[p] * 0.84 + csf[p] * 0.45));
+    img.data[p * 4] = img.data[p * 4 + 1] = img.data[p * 4 + 2] = v;
+    img.data[p * 4 + 3] = 255;
+  }
+  bctx.putImageData(img, 0, 0);
+  const $ = (id) => document.getElementById(id);
+  const toMni = (i, j, k) => [0, 1, 2].map((r) => A[r][0] * i + A[r][1] * j + A[r][2] * k + A[r][3]);
+  const fromMni = (x, y) => ({ c: Math.round(S.i_last - (x - A[0][3]) / A[0][0]), r: Math.round(S.j_last - (y - A[1][3]) / A[1][1]) });
+  let neuro = false;
+  let cur = fromMni(-14, 10);
+  const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
+  const shown = () => (neuro ? W - 1 - cur.c : cur.c);
+  function draw() {
+    ctx.imageSmoothingEnabled = false;
+    ctx.save();
+    if (neuro) { ctx.translate(canvas.width, 0); ctx.scale(-1, 1); }
+    ctx.drawImage(base, 0, 0, canvas.width, canvas.height);
+    ctx.restore();
+    const accent = getComputedStyle(document.documentElement).getPropertyValue("--pole").trim() || "#b2372c";
+    const x0 = shown() * Z, y0 = cur.r * Z;
+    ctx.strokeStyle = accent;
+    ctx.lineWidth = 1;
+    ctx.globalAlpha = 0.55;
+    ctx.beginPath();
+    ctx.moveTo(0, y0 + Z / 2); ctx.lineTo(x0 - Z, y0 + Z / 2);
+    ctx.moveTo(x0 + 2 * Z, y0 + Z / 2); ctx.lineTo(canvas.width, y0 + Z / 2);
+    ctx.moveTo(x0 + Z / 2, 0); ctx.lineTo(x0 + Z / 2, y0 - Z);
+    ctx.moveTo(x0 + Z / 2, y0 + 2 * Z); ctx.lineTo(x0 + Z / 2, canvas.height);
+    ctx.stroke();
+    ctx.globalAlpha = 1;
+    ctx.strokeRect(x0 - 0.5, y0 - 0.5, Z + 1, Z + 1);
+    const i = S.i_last - cur.c, j = S.j_last - cur.r, k = S.k;
+    const [x, y, z] = toMni(i, j, k);
+    const p = cur.r * W + cur.c;
+    const pct = (v) => Math.round((v / 255) * 100);
+    const f = { GM: pct(gm[p]), WM: pct(wm[p]), CSF: pct(csf[p]) };
+    $("read-ijk").textContent = `(${i}, ${j}, ${k})`;
+    $("read-mni").textContent = `(${x}, ${y}, ${z}) mm`;
+    $("read-side").textContent = x > 0.5 ? "subject's right" : x < -0.5 ? "subject's left" : "midline";
+    $("read-tissue").textContent = f.GM + f.WM + f.CSF < 5 ? "outside the brain" : `GM ${f.GM}% · WM ${f.WM}% · CSF ${f.CSF}%`;
+  }
+  function setView(isNeuro) {
+    neuro = isNeuro;
+    $("view-radiological").setAttribute("aria-pressed", String(!neuro));
+    $("view-neurological").setAttribute("aria-pressed", String(neuro));
+    $("orient-left").textContent = neuro ? "L" : "R";
+    $("orient-right").textContent = neuro ? "R" : "L";
+    $("view-note").textContent = neuro
+      ? "Neurological: you look down on the brain from above or behind, so the subject's left is on your left. Many research tools default to this."
+      : "Radiological: you look up from the patient's feet, so their right is on your left. Most clinical viewers use this.";
+    draw();
+  }
+  function pick(event) {
+    const box = canvas.getBoundingClientRect();
+    const dc = clamp(Math.floor(((event.clientX - box.left) / box.width) * W), 0, W - 1);
+    cur = { c: neuro ? W - 1 - dc : dc, r: clamp(Math.floor(((event.clientY - box.top) / box.height) * H), 0, H - 1) };
+    draw();
+  }
+  canvas.addEventListener("pointermove", pick);
+  canvas.addEventListener("pointerdown", (event) => { canvas.focus(); pick(event); });
+  canvas.addEventListener("keydown", (event) => {
+    const step = { ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, -1], ArrowDown: [0, 1] }[event.key];
+    if (!step) return;
+    event.preventDefault();
+    const dc = clamp(shown() + step[0], 0, W - 1);
+    cur = { c: neuro ? W - 1 - dc : dc, r: clamp(cur.r + step[1], 0, H - 1) };
+    draw();
+  });
+  $("view-radiological").addEventListener("click", () => setView(false));
+  $("view-neurological").addEventListener("click", () => setView(true));
+  matchMedia("(prefers-color-scheme: dark)").addEventListener("change", draw);
+  new MutationObserver(draw).observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+  setView(false);
+})();
+</script>
